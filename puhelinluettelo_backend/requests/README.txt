@@ -1,0 +1,1 @@
+For usage in Rest Client addon for visual studio. Used to test backend database funtionality locally
