@@ -1,7 +1,7 @@
 ## Visible at:
-[https://arcane-tundra-08711.herokuapp.com/]
+[https://totalderpphonebook.herokuapp.com/]
 for example using:
-[https://arcane-tundra-08711.herokuapp.com/api/persons/2]
+[https://totalderpphonebook.herokuapp.com/api/persons]
 
 ## How to run:
 

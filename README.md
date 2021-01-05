@@ -1,5 +1,5 @@
 ## Phonebook
-A simple phonebook application made using Node.js, react, express and react-bootstrap. Application can be used to mangage different peoples names and numbers. You can easily add, filter and remove numbers from the application. On later date MongoDB will be merged to the backend to replace the current hardcoded JSON file.
+A simple phonebook application made using Node.js, react, REST, express and react-bootstrap. Application can be used to mangage different peoples names and numbers. You can easily add, filter and remove numbers from the application. On later date MongoDB will be merged to the backend to replace the current hardcoded JSON file system.
 
 ### How to run
 Simple! Just visit: [https://totalderpphonebook.herokuapp.com/]
