@@ -2,7 +2,7 @@
   h2{
     max-width: 60vw;
     margin: auto;
-    padding-top: 15px;
+    padding-top: 18px;
   }
 
   .list-group{
@@ -21,7 +21,7 @@
   h2{
     max-width: 50vw;
     margin: auto;
-    padding-top: 15px;
+    padding-top: 18px;
   }
 
   .list-group{
@@ -39,7 +39,7 @@
   h2{
     max-width: 45vw;
     margin: auto;
-    padding-top: 15px;
+    padding-top: 18px;
   }
 
   .list-group{
@@ -68,8 +68,8 @@ code {
     monospace;
 }
 
-.back{
-  background-color: #f8f7dc;
+h1 {
+  text-align: center;
 }
 
 .form-label{

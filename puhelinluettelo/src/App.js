@@ -128,7 +128,7 @@ const App = () => {
 
   //varsinaisen rungon tulostus
   return (
-    <div className ="back">
+    <div>
       <h1>Phonebook</h1>
       <Notification message={errorMessage}/>
       <Filter newFilter={newFilter} filterMuuttuu={filterMuuttuu} />
