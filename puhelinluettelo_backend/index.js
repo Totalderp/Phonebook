@@ -1,9 +1,22 @@
 const express = require('express')
+const mongoose = require('mongoose')
 const app = express()
 const morgan = require('morgan')
-app.use(express.json())
 //asetetaan front end mukaan käyttäen expressiä.
 app.use(express.static('build'))
+app.use(express.json())
+
+
+//vaaditaan tietokannan salasana dotenv avulla
+require('dotenv').config()
+//otetaan käyttöö moduuli Note kansiosta models/note
+const Note = require('./models/note')
+
+//kuunnellaam dotenvissa annettua porttia
+const PORT = process.env.PORT
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
 
 //morgan on middleware, joka loggaa backendin tapahtumia konsoliin. tiny pienin ja yksinkertaisin
 //app.use(morgan('tiny'))
@@ -20,78 +33,94 @@ app.use(morgan(function (tokens, req, res) {
   ].join(' ')
 }))
 
+
 //kierretään same origin ja CORS policy esto käyttäen cors middlewarea
 const cors = require('cors')
 app.use(cors())
 
 let persons = [
-    {
-      id: 1,
-      name: "Arto Hellas",
-      number: "040-123456"
-    },
-
-    {
-      id: 2,
-      name: "Ada Lovelace",
-      number: "39-44-5323523"
-    },
-
-    {
-      id: 3,
-      name: "Dan Abramov",
-      number: "12-43-234345"
-    },
-    {
-      id: 4,
-      name: "Mary Poppendick",
-      number: "39-23-6423122"
-    }
+  {
+    id: 1,
+    name: "Ei yhteyttä tietokantaan",
+    number: "404"
+  }
 ]
 
 //eli käytäännössä http://localhost:3001/
-app.get('/', (req, res) => {
-  res.send('<h1>Hello World!</h1>')
+app.get('/', (request, response) => {
+  response.send('<h1>Hello World!</h1>')
 })
 
 //palautetaan kaikki numerot
-app.get('/api/persons', (req, res) => {
-  res.json(persons)
+app.get('/api/persons', (request, response) => {
+  Note.find({}).then(persons => {
+    response.json(persons)
+    console.log("Backend palautti kaikki henkilöt")
+  })
 })
 
 //yksittäisen numeron palauttaminen. Jos ID ei ole olemassa tulostetaan virheilmoitus
-app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const note = persons.find(note => note.id === id)
-
-  if (note) {
-    response.json(note)
-  } else {
-    response.status(404).end()
-  }
+app.get('/api/persons/:id', (request, response, next) => {
+  Note.findById(request.params.id).then(note => {
+    if (note) {
+      response.json(note)
+      console.log("Backend palautti yhden henkilön")
+    } else {
+      response.status(404).end()
+    }
+  })
+  .catch(error => next(error))
 })
 
-//annetussa IDssä olevan tiedon poistaminen
-app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter(note => note.id !== id)
+//yksittäisen henkilön numeron päivittäminen
+app.put('/api/persons/:id', (request, response, next) => {
+  console.log("!--Yritetään päivittää numeroa--!")
+  const body = request.body
+  console.log("sisältä:", request.body)
 
-  response.status(204).end()
+  const note = {
+    name: body.name, 
+    number: body.number,
+  }
+
+  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+    .then(updatedNote => {
+      response.json(updatedNote)
+    })
+    .catch(error => next(error))
+})
+
+
+//annetussa IDssä olevan tiedon poistaminen
+app.delete('/api/persons/:id', (request, response, next) => {
+  Note.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
 //palautetaa tietoja tietokannasta
-app.get('/info', (req, res) => {
-  const messege = 'Phonebook has info for '+ persons.length + ' people '
-  const date = new Date()
-  res.send(messege+ "</br>" + date)
+app.get('/info', (request, response) => {
+  console.log("täälä")
+  
+    Note.find({}).then(persons => {
+      response.send(`Phonebook has info for ${persons.length} people. </br> ${new Date()}`)
+    })
+
+
+  //const messege = 'Phonebook has info for ' + persons.length + ' people '
+  //const date = new Date()
+  //response.send(messege + "</br>" + date)
+  
 })
 
 //generoidaan uusi ID randomilla tehtävänanoon mukaisesti
-const generateId = () => {
+/*const generateId = () => {
   console.log("Randomisoidaan ID")
   const newID = Math.floor(Math.random() * Math.floor(9999999999))
   return newID
-}
+}*/
 
 //luodaan uus numero tietokantaan
 app.post('/api/persons', (request, response) => {
@@ -101,33 +130,45 @@ app.post('/api/persons', (request, response) => {
   //tarkistetaan onko nimi jo listassa ja tulostetaan virheilmoitus
   const nimet = persons.map(single => single.name)
 
+  //virheiden ohjaus
   if (!body.name) {
-    return response.status(400).json({ 
-      error: 'name is empty' 
+    return response.status(400).json({
+      error: 'name is empty'
     })
-  }else if(!body.number) {
-    return response.status(400).json({ 
-      error: 'number is empty' 
+  } else if (!body.number) {
+    return response.status(400).json({
+      error: 'number is empty'
     })
-  }else if(nimet.includes(body.name)) {
-    return response.status(400).json({ 
-      error: 'name must be unique' 
-  })}
-
-  const uusiNumero = {
-    id: generateId(),
-    name: body.name,
-    number: body.number
-    
+  } else if (nimet.includes(body.name)) {
+    return response.status(400).json({
+      error: 'name must be unique'
+    })
   }
 
-  persons = persons.concat(uusiNumero)
-  console.log('Uusi numero luotu!')
-  response.json(uusiNumero)
+  //uuden tiedon rakentaminen
+  const uusiNumero = new Note({
+    name: body.name,
+    number: body.number
+  })
+
+  uusiNumero.save().then(savedNote => {
+    response.json(savedNote)
+  })
 })
 
-//merkitään mitä porttia kuunellaan
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+//virheenkäsittelijä virheviesti
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+app.use(unknownEndpoint)
+
+//express virheidenkäsittelijä. Hoitaa virheviestien tulostamisen.
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  next(error)
+}
+app.use(errorHandler)

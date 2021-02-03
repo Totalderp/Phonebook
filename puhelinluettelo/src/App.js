@@ -99,19 +99,29 @@ const App = () => {
     else {
       //jos ikkunasta klikataan OK, lähetetään numberService komponentille Axionille PUT update käsky
       if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
-        
+
         //tämän rivin kirjoittamiseen meni liian kauan
         const lisattavanID = persons.filter(haeid => haeid.name === lisattavaperson.name)
-        
+
         //päivitetään vanha tieto
         numbersService
           .update(lisattavanID[0].id, lisattavaperson)
           .then(response => {
             console.log('Palvelin vastasi uuteen tietoon:', response)
-            setPersons(persons.concat(response.data))
+
             //tyhjennetään kentät
             setNewName('')
             setNewNumber('')
+
+            //päivitetään lista muutoksen jälkeen
+            numbersService
+              .getAll()
+              .then(response => {
+                console.log('effect -> promise fulfilled', response)
+                setPersons(response.data)
+              })
+            console.log('Dataa löydetty 3:', persons.length, 'kpl')
+
 
             //tulostetaan ilmoitus onnistuneesta tiedon muuttamisesta
             setErrorMessage(
@@ -130,12 +140,12 @@ const App = () => {
   return (
     <div>
       <h1>Phonebook</h1>
-      <Notification message={errorMessage}/>
+      <Notification message={errorMessage} />
       <Filter newFilter={newFilter} filterMuuttuu={filterMuuttuu} />
       <h2>Add a new</h2>
       <PersonForm addNote={addNote} newName={newName} nimiMuuttuu={nimiMuuttuu} newNumber={newNumber} numeroMuuttuu={numeroMuuttuu} />
       <h2>Numbers</h2>
-      <PersonsListForm filteredPersons={filteredPersons} setErrorMessage={setErrorMessage} setPersons={setPersons}/>
+      <PersonsListForm filteredPersons={filteredPersons} setErrorMessage={setErrorMessage} setPersons={setPersons} />
       <a href="https://github.com/Totalderp/Phonebook" >Source code on GitHub</a>
     </div>
   )
@@ -144,8 +154,8 @@ const App = () => {
 //Person komponentti. Tulostaa yhden ainoa ihmisen tiedot, sekä poistamiseen käytetty painike
 const Person = (props) => {
   return (<ListGroupItem key={props.id}>{props.name}: {props.number}
-    <Button className ="numberButton" type="submit" onClick={() => {
-      const messege = 'Delete ' +props.name
+    <Button className="numberButton" type="submit" onClick={() => {
+      const messege = 'Delete ' + props.name
       console.log(messege)
       if (window.confirm(messege)) {
         //jos ikkunasta klikataan OK, lähetetään numberService komponentille Axionille delete käsky
@@ -170,20 +180,21 @@ const Person = (props) => {
               .then(response => {
                 console.log('päivitetään', response)
                 props.setPersons(response.data)
-                })
-            
+              })
+
             console.log('Dataa löydetty:', response.length, 'kpl')
           })
 
           //kriittisen virheen tulostamiseen käytetty luokka
           .catch(error => {
             console.log('Virhe poistaessa, tulostetaan virheilmoitus')
-            props.setErrorMessage (
+            props.setErrorMessage(
               `Name and number were already removed from server`
             )
             setTimeout(() => {
               props.setErrorMessage(null)
-            }, 5000)})
+            }, 5000)
+          })
       }
     }
     }>Delete</Button></ListGroupItem>)
@@ -195,7 +206,7 @@ const PersonsListForm = (props) => {
   return (
     <ListGroup>
       {props.filteredPersons.map(person =>
-        <Person key={person.id} name={person.name} number={person.number} id={person.id} setErrorMessage={props.setErrorMessage} setPersons={props.setPersons}/>
+        <Person key={person.id} name={person.name} number={person.number} id={person.id} setErrorMessage={props.setErrorMessage} setPersons={props.setPersons} />
       )}</ListGroup>
   )
 }
@@ -204,8 +215,8 @@ const PersonsListForm = (props) => {
 const Filter = (props) => (
   <Form>
     <Form.Group>
-    <Form.Label>Search:</Form.Label>
-      <Form.Control type="text" placeholder="Search users by name" value={props.newFilter} onChange={props.filterMuuttuu}/>
+      <Form.Label>Search:</Form.Label>
+      <Form.Control type="text" placeholder="Search users by name" value={props.newFilter} onChange={props.filterMuuttuu} />
     </Form.Group>
   </Form>
 )
@@ -215,14 +226,14 @@ const PersonForm = (props) => (
   <Form onSubmit={props.addNote}>
     <Form.Group>
       <Form.Label>Name:</Form.Label>
-      <Form.Control type="text" placeholder="Enter new name" value={props.newName} onChange={props.nimiMuuttuu}/> 
+      <Form.Control type="text" placeholder="Enter new name" value={props.newName} onChange={props.nimiMuuttuu} />
     </Form.Group>
     <Form.Group>
       <Form.Label>Number:</Form.Label>
-      <Form.Control type="text" placeholder="Enter new number" value={props.newNumber} onChange={props.numeroMuuttuu}/>
+      <Form.Control type="text" placeholder="Enter new number" value={props.newNumber} onChange={props.numeroMuuttuu} />
     </Form.Group>
     <Form.Group>
-      <Button className ="filterButton" type="submit">Submit</Button>
+      <Button className="filterButton" type="submit">Submit</Button>
     </Form.Group>
   </Form>
 )
